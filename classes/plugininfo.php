@@ -21,6 +21,7 @@ use editor_tiny\plugin;
 use editor_tiny\plugin_with_buttons;
 use editor_tiny\plugin_with_configuration;
 use editor_tiny\plugin_with_menuitems;
+use html_writer;
 
 /**
  * Tiny c4l plugin for Moodle.
@@ -166,9 +167,32 @@ class plugininfo extends plugin implements
                         },
                         $html
                     );
+                    // Joel Dapiawen March 24, 2025
+                    // Define allowed attributes
+                    $allowedAttributes = [
+                        'data-toggle',
+                        'data-bs-toggle',
+                        'data-target',
+                        'aria-expanded',
+                        'aria-controls',
+                        'class',
+                        'id',
+                        // Add more attributes here if needed
+                    ];
 
+                    // Prepare options for format_text
+                    $options = [
+                    'context' => $context,
+                    'trusted' => true,
+                    'noclean' => true,
+                    'allow_attribs' => ['data-toggle', 'data-bs-toggle', 'data-target', 'aria-expanded', 'aria-controls']
+                    ];
+
+                    // Format the html with the defined options
                     // Clean HTML code.
-                    $html = format_text($html, FORMAT_HTML);
+                    // $html = format_text($html, FORMAT_HTML);
+                    $html = format_text( $html, FORMAT_HTML, $options);
+
                     $html = preg_replace('/ style=("|\')(.*?)("|\')/', '', $html);
 
                     // Restore {}.
@@ -193,6 +217,6 @@ class plugininfo extends plugin implements
             });
         }
 
-        return $customcomponents;
+        return ($customcomponents);
     }
 }

@@ -214,7 +214,7 @@ const handleModalHidden = (editor) => {
 
 /**
  * Handle a click in a component button.
- *
+ * Joel Dapiawen April 2, 2025 code update
  * @param {MouseEvent} event The click event
  * @param {obj} editor
  * @param {obj} modal
@@ -222,50 +222,51 @@ const handleModalHidden = (editor) => {
 const handleButtonClick = (event, editor, modal) => {
     const selectedButton = event.target.closest('button').dataset.id;
 
-    // Component button.
+    // Find the selected component.
     const component = Components.find(element => element.name == selectedButton);
-    if (component != undefined) {
-        const sel = editor.selection.getContent();
-        let componentCode = component.code;
-        const placeholder = (sel.length > 0 ? sel : component.text);
-
-        // Create a new node to replace the placeholder.
-        const randomId = generateRandomID();
-        const newNode = document.createElement('span');
-        newNode.dataset.id = randomId;
-        newNode.innerHTML = placeholder;
-        componentCode = componentCode.replace('{{PLACEHOLDER}}', newNode.outerHTML);
-
-        // Return active variants for current component.
-        const variants = getVariantsClass(component.name);
-
-        // Apply variants to html component.
-        if (variants.length > 0) {
-            componentCode = componentCode.replace('{{VARIANTS}}', variants.join(' '));
-            componentCode = componentCode.replace('{{VARIANTSHTML}}', getVariantsHtml(component.name));
-        } else {
-            componentCode = componentCode.replace('{{VARIANTS}}', '');
-            componentCode = componentCode.replace('{{VARIANTSHTML}}', '');
-        }
-
-        // Apply random IDs.
-        componentCode = applyRandomID(componentCode);
-
-        // Apply lang strings.
-        componentCode = applyLangStrings(componentCode);
-
-        // Sets new content.
-        editor.selection.setContent(componentCode);
-
-        // Select text.
-        const nodeSel = editor.dom.select('span[data-id="' + randomId + '"]');
-        if (nodeSel?.[0]) {
-            editor.selection.select(nodeSel[0]);
-        }
-
-        modal.destroy();
-        editor.focus();
+    if (!component) {
+        return;
     }
+
+    let componentCode = component.code;
+    // Generate unique IDs for accordion elements.
+    let uniqueID = generateRandomID();
+    let headingID = generateRandomID();
+    let collapseID = generateRandomID();
+    // Replace placeholders with unique IDs.
+    componentCode = componentCode.replace(/__UNIQUEID__/g, uniqueID);
+    componentCode = componentCode.replace(/__HEADINGID__/g, headingID);
+    componentCode = componentCode.replace(/__COLLAPSEID__/g, collapseID);
+
+    // Handle placeholder text.
+    const sel = editor.selection.getContent();
+    const placeholder = sel.length > 0 ? sel : component.text;
+    const randomId = generateRandomID();
+    const newNode = `<span data-id="${randomId}">${placeholder}</span>`;
+
+    componentCode = componentCode.replace('{{PLACEHOLDER}}', newNode);
+
+    // Apply active variants.
+    const variants = getVariantsClass(component.name);
+    componentCode = componentCode.replace('{{VARIANTS}}', variants.length > 0 ? variants.join(' ') : '');
+    componentCode = componentCode.replace('{{VARIANTSHTML}}', variants.length > 0 ? getVariantsHtml(component.name) : '');
+
+    // Apply additional transformations.
+    componentCode = applyRandomID(componentCode);
+    componentCode = applyLangStrings(componentCode);
+
+    // Insert modified component into TinyMCE editor.
+    editor.selection.setContent(componentCode);
+
+    // Select inserted text.
+    const nodeSel = editor.dom.select(`span[data-id="${randomId}"]`);
+    if (nodeSel?.[0]) {
+        editor.selection.select(nodeSel[0]);
+    }
+
+    // Close modal and refocus editor.
+    modal.destroy();
+    editor.focus();
 };
 
 /**
